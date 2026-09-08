@@ -10,47 +10,27 @@ import {
   SUBSCRIPTION_PLAN,
   SUBSCRIPTION_STATUS,
   INTEGRATION_PROVIDERS,
-} from "../../shared/constants/user.js";
+} from "../../shared/constants/user.constants.js";
+import { BCRYPT_SALT_ROUNDS } from "../../shared/config/envConfig.js";
 
 const { Schema } = mongoose;
 
-/**
- * ============================================================
- * USER MODEL (SmartTask / AtomicTasks / HabitFlow)
- * ============================================================
- * Covers: auth, profile, preferences, gamification,
- * subscriptions, integrations, social, analytics.
- * All enum values come from constants.js — never hardcode
- * a plan/status/role string here directly.
- * ============================================================
- */
-
-// ---------------- Sub-schema: Notification preferences ----------------
+// Notification preferences
 const notificationPreferencesSchema = new Schema(
   {
-    email: {
-      type: Boolean,
-      default: true, // receive email notifications by default
-    },
-    push: {
-      type: Boolean,
-      default: true, // receive push notifications by default
-    },
-    sms: {
-      type: Boolean,
-      default: false, // SMS opt-in required
-    },
+    email: { type: Boolean, default: true },
+    push: { type: Boolean, default: true },
+    sms: { type: Boolean, default: false },
   },
-  { _id: false }, // no need for a separate _id on this nested object
+  { _id: false },
 );
 
-// ---------------- Sub-schema: Reminder defaults ----------------
 const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 const reminderPreferencesSchema = new Schema(
   {
     taskReminderTime: {
-      type: String, // stored as 'HH:mm'
+      type: String,
       default: "09:00",
       validate: {
         validator: (v) => HHMM_REGEX.test(v),
@@ -71,22 +51,22 @@ const reminderPreferencesSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Privacy settings ----------------
+// Privacy settings
 const privacyPreferencesSchema = new Schema(
   {
     shareStats: {
       type: Boolean,
-      default: false, // productivity stats hidden from others by default
+      default: false,
     },
     publicProfile: {
       type: Boolean,
-      default: false, // profile private by default
+      default: false,
     },
   },
   { _id: false },
 );
 
-// ---------------- Sub-schema: Preferences (parent) ----------------
+// Preferences (parent)
 const preferencesSchema = new Schema(
   {
     notifications: {
@@ -113,7 +93,7 @@ const preferencesSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Streaks ----------------
+// Streaks
 const streaksSchema = new Schema(
   {
     current: {
@@ -130,7 +110,7 @@ const streaksSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Gamification ----------------
+// Gamification
 const gamificationSchema = new Schema(
   {
     points: {
@@ -149,7 +129,7 @@ const gamificationSchema = new Schema(
       min: [0, "XP cannot be negative."],
     },
     badges: {
-      type: [Schema.Types.ObjectId], // array of badge IDs
+      type: [Schema.Types.ObjectId],
       default: [],
     },
     streaks: {
@@ -160,7 +140,7 @@ const gamificationSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Billing address ----------------
+// Billing address
 const billingAddressSchema = new Schema(
   {
     line1: { type: String, trim: true, default: "" },
@@ -173,7 +153,7 @@ const billingAddressSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Subscription ----------------
+// Subscription
 const subscriptionSchema = new Schema(
   {
     plan: {
@@ -194,12 +174,11 @@ const subscriptionSchema = new Schema(
     },
     trialEndsAt: {
       type: Date,
-      default: null, // set when a trial period starts
+      default: null,
     },
     paymentCustomerId: {
-      type: String, // Stripe / Razorpay customer ID
+      type: String,
       default: null,
-      index: true, // faster billing lookups
     },
     billing: {
       type: billingAddressSchema,
@@ -209,7 +188,7 @@ const subscriptionSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: App-specific settings ----------------
+// App-specific settings
 const settingsSchema = new Schema(
   {
     defaultTaskPriority: {
@@ -228,7 +207,7 @@ const settingsSchema = new Schema(
       },
     },
     focusTimerDuration: {
-      type: Number, // minutes
+      type: Number,
       default: 25,
       min: [5, "Focus timer must be at least 5 minute."],
       max: [180, "Focus timer cannot exceed 180 minutes."],
@@ -245,7 +224,7 @@ const settingsSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Third-party integrations ----------------
+// Third-party integrations
 const integrationSchema = new Schema(
   {
     provider: {
@@ -257,28 +236,18 @@ const integrationSchema = new Schema(
       },
     },
     accessToken: {
-      type: String, // should be encrypted before saving (e.g. via mongoose-encryption)
-      required: [true, "Access token is required for an integration."],
-      select: false, // exclude from query results by default
-    },
-    refreshToken: {
       type: String,
-      default: null,
+      required: [true, "Access token is required for an integration."],
       select: false,
     },
-    tokenExpiresAt: {
-      type: Date,
-      default: null,
-    },
-    connected: {
-      type: Boolean,
-      default: true,
-    },
+    refreshToken: { type: String, default: null, select: false },
+    tokenExpiresAt: { type: Date, default: null },
+    connected: { type: Boolean, default: true },
   },
-  { _id: true, timestamps: true }, // each integration gets its own id + createdAt/updatedAt
+  { _id: true, timestamps: true },
 );
 
-// ---------------- Sub-schema: Social connections ----------------
+// Social connections
 const socialSchema = new Schema(
   {
     friends: {
@@ -297,7 +266,7 @@ const socialSchema = new Schema(
   { _id: false },
 );
 
-// ---------------- Sub-schema: Analytics ----------------
+// Analytics
 const analyticsSchema = new Schema(
   {
     tasksCompleted: {
@@ -316,17 +285,12 @@ const analyticsSchema = new Schema(
       min: [0, "productivityScore cannot be less than 0."],
       max: [100, "productivityScore cannot exceed 100."],
     },
-    lastCalculatedAt: {
-      type: Date,
-      default: null,
-    },
+    lastCalculatedAt: { type: Date, default: null },
   },
   { _id: false },
 );
 
-// ================================================================
 // MAIN USER SCHEMA
-// ================================================================
 const userSchema = new Schema(
   {
     name: {
@@ -340,7 +304,6 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: [true, "Username is required."],
-      unique: true,
       lowercase: true,
       trim: true,
       minlength: [3, "Username must be at least 3 characters long."],
@@ -349,7 +312,18 @@ const userSchema = new Schema(
         /^[a-zA-Z_.]+$/,
         "Username can only contain letters, underscores, and dots.",
       ],
-      index: true,
+    },
+
+    email: {
+      type: String,
+      required: [true, "Email is required."],
+      unique: true, // This creates the unique index – no need to repeat it below
+      lowercase: true,
+      trim: true,
+      match: [
+        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+        "Please provide a valid email address.",
+      ],
     },
 
     password: {
@@ -373,9 +347,9 @@ const userSchema = new Schema(
       default: AUTH_PROVIDERS.EMAIL,
     },
 
-    googleId: { type: String, default: null, index: true },
-    githubId: { type: String, default: null, index: true },
-    twitterId: { type: String, default: null, index: true },
+    googleId: { type: String, default: null },
+    githubId: { type: String, default: null },
+    twitterId: { type: String, default: null },
 
     avatar: {
       type: String,
@@ -394,14 +368,6 @@ const userSchema = new Schema(
     },
 
     timezone: { type: String, default: "UTC" },
-
-    language: {
-      type: String,
-      default: "en",
-      lowercase: true,
-      minlength: [2, "Language code looks too short."],
-      maxlength: [5, "Language code looks too long."],
-    },
 
     theme: {
       type: String,
@@ -476,25 +442,20 @@ const userSchema = new Schema(
   },
 );
 
-// INDEXES
-userSchema.index({ email: 1 }, { unique: true });
+// INDEXES — unique + sparse (no duplicates)
 userSchema.index({ username: 1 }, { unique: true });
-userSchema.index({ "subscription.paymentCustomerId": 1 });
-userSchema.index({ googleId: 1 });
-userSchema.index({ githubId: 1 });
-userSchema.index({ twitterId: 1 });
+// email index is already created via 'unique: true' in the field definition
+userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ githubId: 1 }, { sparse: true });
+userSchema.index({ twitterId: 1 }, { sparse: true });
+userSchema.index({ "subscription.paymentCustomerId": 1 }, { sparse: true });
 
-// Hash the password before saving, only if it was modified and exists
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password") || !this.password) return next();
+// Hash password before saving (Mongoose 9: async hooks must not use next())
+userSchema.pre("save", async function () {
+  if (!this.isModified("password") || !this.password) return;
 
-  try {
-    const salt = await bcrypt.genSalt(16);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
+  const salt = await bcrypt.genSalt(BCRYPT_SALT_ROUNDS);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // INSTANCE METHODS
