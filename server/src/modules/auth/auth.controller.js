@@ -85,34 +85,7 @@ export const signup = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-  const { identifier, password } = req.body;
-
-  const normalizedIdentifier = identifier.toLowerCase().trim();
-
-  const user = await User.findOne({
-    $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }],
-  }).select("+password");
-
-  if (!user) {
-    throw ApiError.unauthorized("Invalid credentials.");
-  }
-
-  if (user.authProvider !== AUTH_PROVIDERS.EMAIL) {
-    throw ApiError.unauthorized(
-      `This account uses ${user.authProvider} sign-in. Please use that method.`,
-    );
-  }
-
-  if (user.status !== USER_STATUS.ACTIVE) {
-    throw ApiError.forbidden(
-      "Your account is not active. Please contact support.",
-    );
-  }
-
-  const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid) {
-    throw ApiError.unauthorized("Invalid credentials.");
-  }
+  const user = req.user;
 
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
@@ -148,6 +121,32 @@ export const login = asyncHandler(async (req, res) => {
     { user: responseData, accessToken, tokenType: "Bearer" },
     "Login successful.",
   );
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const user = req.user;
+
+  const responseData = {
+    id: user._id,
+    name: user.name,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    role: user.role,
+    theme: user.theme,
+    emailVerified: user.emailVerified,
+    preferences: user.preferences,
+    gamification: user.gamification,
+    subscription: user.subscription,
+    settings: user.settings,
+    social: user.social,
+    analytics: user.analytics,
+    lastLogin: user.lastLogin,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
+  return ApiResponse.ok(res, responseData, "Authenticated user data");
 });
 
 export const logout = () => {};

@@ -1,7 +1,9 @@
 import express from "express";
 import { validate } from "express-validation";
-import { login, signup } from "./auth.controller.js";
+import passport from "passport";
+import { login, signup, getMe } from "./auth.controller.js";
 import { loginValidation, signupValidation } from "./auth.validation.js";
+import { authenticateJWT } from "../../shared/middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -22,7 +24,10 @@ router.post(
     { context: true },
     { abortEarly: false, stripUnknown: true },
   ),
+  passport.authenticate("local", { session: false }),
   login,
 );
+
+router.get("/me", authenticateJWT, getMe);
 
 export default router;
