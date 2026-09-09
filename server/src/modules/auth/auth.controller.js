@@ -20,11 +20,9 @@ export const signup = asyncHandler(async (req, res) => {
     settings,
   } = req.body;
 
-  // Normalise inputs
   const normalizedUsername = username.toLowerCase().trim();
   const normalizedEmail = email.toLowerCase().trim();
 
-  // Check for existing user
   const [existingUsername, existingEmail] = await Promise.all([
     User.findOne({ username: normalizedUsername }).select("_id"),
     User.findOne({ email: normalizedEmail }).select("_id"),
@@ -38,11 +36,9 @@ export const signup = asyncHandler(async (req, res) => {
     throw ApiError.conflict("Email is already registered.");
   }
 
-  // Generate email verification token
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  // Build user data
   const userData = {
     name: name.trim(),
     username: normalizedUsername,
@@ -61,9 +57,6 @@ export const signup = asyncHandler(async (req, res) => {
   };
 
   const user = await User.create(userData);
-
-  // (Optional) Send verification email – uncomment when ready
-  // await sendVerificationEmail(user.email, verificationToken);
 
   const responseData = {
     id: user._id,

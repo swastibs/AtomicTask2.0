@@ -23,13 +23,11 @@ const colors = {
 
 winston.addColors(colors);
 
-// Determine the log level based on environment
 const level = () => {
   const env = process.env.NODE_ENV || "development";
   return env === "development" ? "debug" : "info";
 };
 
-// Custom format for console (with colors and timestamps)
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.colorize({ all: true }),
@@ -38,22 +36,19 @@ const consoleFormat = winston.format.combine(
   ),
 );
 
-// Format for file logs (JSON, without colors)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.json(),
 );
 
-// Create the logger
 const logger = winston.createLogger({
   level: level(),
   levels,
   transports: [
-    // Console transport (always on)
     new winston.transports.Console({
       format: consoleFormat,
     }),
-    // File transport for errors (only in production)
+
     ...(process.env.NODE_ENV === "production"
       ? [
           new winston.transports.File({
