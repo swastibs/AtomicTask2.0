@@ -1,9 +1,15 @@
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+
 import ApiError from "../../shared/utils/ApiError.js";
 import ApiResponse from "../../shared/utils/ApiResponse.js";
 import asyncHandler from "../../shared/utils/asyncHandler.js";
 import User from "./auth.model.js";
-import { AUTH_PROVIDERS } from "../../shared/constants/user.constants.js";
+import { JWT_SECRET, JWT_EXPIRES_IN } from "../../shared/config/envConfig.js";
+import {
+  AUTH_PROVIDERS,
+  USER_STATUS,
+} from "../../shared/constants/user.constants.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const {
@@ -78,5 +84,70 @@ export const signup = asyncHandler(async (req, res) => {
   );
 });
 
-export const login = () => {};
+export const login = asyncHandler(async (req, res) => {
+  const { identifier, password } = req.body;
+
+  const normalizedIdentifier = identifier.toLowerCase().trim();
+
+  const user = await User.findOne({
+    $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }],
+  }).select("+password");
+
+  if (!user) {
+    throw ApiError.unauthorized("Invalid credentials.");
+  }
+
+  if (user.authProvider !== AUTH_PROVIDERS.EMAIL) {
+    throw ApiError.unauthorized(
+      `This account uses ${user.authProvider} sign-in. Please use that method.`,
+    );
+  }
+
+  if (user.status !== USER_STATUS.ACTIVE) {
+    throw ApiError.forbidden(
+      "Your account is not active. Please contact support.",
+    );
+  }
+
+  const isPasswordValid = await user.comparePassword(password);
+  if (!isPasswordValid) {
+    throw ApiError.unauthorized("Invalid credentials.");
+  }
+
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  const accessToken = jwt.sign(
+    { id: user._id, email: user.email, role: user.role },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN },
+  );
+
+  const responseData = {
+    id: user._id,
+    name: user.name,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    role: user.role,
+    theme: user.theme,
+    emailVerified: user.emailVerified,
+    preferences: user.preferences,
+    gamification: user.gamification,
+    subscription: user.subscription,
+    settings: user.settings,
+    social: user.social,
+    analytics: user.analytics,
+    lastLogin: user.lastLogin,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
+  return ApiResponse.ok(
+    res,
+    { user: responseData, accessToken, tokenType: "Bearer" },
+    "Login successful.",
+  );
+});
+
 export const logout = () => {};

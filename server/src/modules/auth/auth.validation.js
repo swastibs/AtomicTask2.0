@@ -72,7 +72,11 @@ export const signupValidation = {
 
 export const loginValidation = {
   body: Joi.object({
-    email: email.required(),
+    identifier: Joi.string().required().messages({
+      "string.base": "Identifier must be a string",
+      "string.empty": "Username or email is required",
+      "any.required": "Username or email is required",
+    }),
     password: password.required(),
   }),
 };
