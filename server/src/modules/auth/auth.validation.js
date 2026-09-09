@@ -1,7 +1,6 @@
 import { Joi } from "express-validation";
 import { THEME } from "../../shared/constants/user.constants.js";
 
-// ----- Shared schemas / reusable rules -----
 const username = Joi.string()
   .min(3)
   .max(30)
@@ -49,7 +48,6 @@ const theme = Joi.string()
 const avatar = Joi.string().uri().allow(null);
 const bio = Joi.string().max(280).allow("");
 
-// ----- 1. SIGNUP -----
 export const signupValidation = {
   body: Joi.object({
     name: Joi.string().min(2).max(100).required().messages({
@@ -72,7 +70,6 @@ export const signupValidation = {
   }),
 };
 
-// ----- 2. LOGIN -----
 export const loginValidation = {
   body: Joi.object({
     email: email.required(),
@@ -80,7 +77,6 @@ export const loginValidation = {
   }),
 };
 
-// ----- 3. EMAIL VERIFICATION -----
 export const verifyEmailValidation = {
   params: Joi.object({
     token: Joi.string().required().messages({
@@ -90,14 +86,12 @@ export const verifyEmailValidation = {
   }),
 };
 
-// ----- 4. FORGOT PASSWORD (request reset link) -----
 export const forgotPasswordValidation = {
   body: Joi.object({
     email: email.required(),
   }),
 };
 
-// ----- 5. RESET PASSWORD (with token) -----
 export const resetPasswordValidation = {
   body: Joi.object({
     token: Joi.string().required().messages({
@@ -116,7 +110,6 @@ export const resetPasswordValidation = {
   }),
 };
 
-// ----- 6. CHANGE PASSWORD (authenticated) -----
 export const changePasswordValidation = {
   body: Joi.object({
     oldPassword: Joi.string().required().messages({
@@ -135,7 +128,6 @@ export const changePasswordValidation = {
   }),
 };
 
-// ----- 7. UPDATE PROFILE (authenticated) -----
 export const updateProfileValidation = {
   body: Joi.object({
     name: Joi.string().min(2).max(100).optional(),
@@ -155,7 +147,6 @@ export const updateProfileValidation = {
     }),
 };
 
-// ----- 8. REFRESH TOKEN -----
 export const refreshTokenValidation = {
   body: Joi.object({
     refreshToken: Joi.string().required().messages({

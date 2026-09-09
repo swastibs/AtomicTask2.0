@@ -15,7 +15,6 @@ import { BCRYPT_SALT_ROUNDS } from "../../shared/config/envConfig.js";
 
 const { Schema } = mongoose;
 
-// Notification preferences
 const notificationPreferencesSchema = new Schema(
   {
     email: { type: Boolean, default: true },
@@ -51,7 +50,6 @@ const reminderPreferencesSchema = new Schema(
   { _id: false },
 );
 
-// Privacy settings
 const privacyPreferencesSchema = new Schema(
   {
     shareStats: {
@@ -66,7 +64,6 @@ const privacyPreferencesSchema = new Schema(
   { _id: false },
 );
 
-// Preferences (parent)
 const preferencesSchema = new Schema(
   {
     notifications: {
@@ -93,7 +90,6 @@ const preferencesSchema = new Schema(
   { _id: false },
 );
 
-// Streaks
 const streaksSchema = new Schema(
   {
     current: {
@@ -110,7 +106,6 @@ const streaksSchema = new Schema(
   { _id: false },
 );
 
-// Gamification
 const gamificationSchema = new Schema(
   {
     points: {
@@ -140,7 +135,6 @@ const gamificationSchema = new Schema(
   { _id: false },
 );
 
-// Billing address
 const billingAddressSchema = new Schema(
   {
     line1: { type: String, trim: true, default: "" },
@@ -153,7 +147,6 @@ const billingAddressSchema = new Schema(
   { _id: false },
 );
 
-// Subscription
 const subscriptionSchema = new Schema(
   {
     plan: {
@@ -188,7 +181,6 @@ const subscriptionSchema = new Schema(
   { _id: false },
 );
 
-// App-specific settings
 const settingsSchema = new Schema(
   {
     defaultTaskPriority: {
@@ -224,7 +216,6 @@ const settingsSchema = new Schema(
   { _id: false },
 );
 
-// Third-party integrations
 const integrationSchema = new Schema(
   {
     provider: {
@@ -247,7 +238,6 @@ const integrationSchema = new Schema(
   { _id: true, timestamps: true },
 );
 
-// Social connections
 const socialSchema = new Schema(
   {
     friends: {
@@ -266,7 +256,6 @@ const socialSchema = new Schema(
   { _id: false },
 );
 
-// Analytics
 const analyticsSchema = new Schema(
   {
     tasksCompleted: {
@@ -290,7 +279,6 @@ const analyticsSchema = new Schema(
   { _id: false },
 );
 
-// MAIN USER SCHEMA
 const userSchema = new Schema(
   {
     name: {
@@ -317,7 +305,7 @@ const userSchema = new Schema(
     email: {
       type: String,
       required: [true, "Email is required."],
-      unique: true, // This creates the unique index – no need to repeat it below
+      unique: true,
       lowercase: true,
       trim: true,
       match: [
@@ -410,7 +398,6 @@ const userSchema = new Schema(
 
     lastLogin: { type: Date, default: null },
 
-    // ---------- Nested feature groups ----------
     preferences: { type: preferencesSchema, default: () => ({}) },
     gamification: { type: gamificationSchema, default: () => ({}) },
     subscription: { type: subscriptionSchema, default: () => ({}) },
@@ -419,7 +406,6 @@ const userSchema = new Schema(
     social: { type: socialSchema, default: () => ({}) },
     analytics: { type: analyticsSchema, default: () => ({}) },
 
-    // ---------- Password reset / email verification ----------
     resetPasswordToken: { type: String, default: null, select: false },
     resetPasswordExpires: { type: Date, default: null, select: false },
     verificationToken: { type: String, default: null, select: false },
@@ -442,15 +428,13 @@ const userSchema = new Schema(
   },
 );
 
-// INDEXES — unique + sparse (no duplicates)
 userSchema.index({ username: 1 }, { unique: true });
-// email index is already created via 'unique: true' in the field definition
+
 userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ githubId: 1 }, { sparse: true });
 userSchema.index({ twitterId: 1 }, { sparse: true });
 userSchema.index({ "subscription.paymentCustomerId": 1 }, { sparse: true });
 
-// Hash password before saving (Mongoose 9: async hooks must not use next())
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
 
@@ -458,7 +442,6 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// INSTANCE METHODS
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

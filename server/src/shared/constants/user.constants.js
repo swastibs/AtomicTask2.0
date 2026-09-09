@@ -1,4 +1,3 @@
-// Auth
 export const AUTH_PROVIDERS = {
   EMAIL: "email",
   GOOGLE: "google",
@@ -6,7 +5,6 @@ export const AUTH_PROVIDERS = {
   GITHUB: "github",
 };
 
-// User account
 export const USER_ROLES = {
   USER: "user",
   ADMIN: "admin",
@@ -19,7 +17,6 @@ export const USER_STATUS = {
   DELETED: "deleted",
 };
 
-// Profile preferences
 export const THEME = {
   LIGHT: "light",
   DARK: "dark",
@@ -37,7 +34,6 @@ export const WEEK_START_DAY = {
   MONDAY: 1,
 };
 
-// Subscription / billing
 export const SUBSCRIPTION_PLAN = {
   FREE: "free",
   PRO: "pro",
@@ -51,7 +47,6 @@ export const SUBSCRIPTION_STATUS = {
   CANCELED: "canceled",
 };
 
-// Integrations
 export const INTEGRATION_PROVIDERS = {
   GOOGLE_CALENDAR: "google_calendar",
   SLACK: "slack",
@@ -60,7 +55,6 @@ export const INTEGRATION_PROVIDERS = {
   TEAMS: "teams",
 };
 
-// Tasks
 export const TASK_STATUS = {
   TODO: "todo",
   IN_PROGRESS: "in_progress",
@@ -76,7 +70,6 @@ export const TASK_PRIORITY = {
   HIGHEST: 5,
 };
 
-// Habits
 export const HABIT_FREQUENCY = {
   DAILY: "daily",
   WEEKLY: "weekly",

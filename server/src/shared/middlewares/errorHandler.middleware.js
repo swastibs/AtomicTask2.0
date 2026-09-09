@@ -1,6 +1,6 @@
 import ApiError from "../utils/ApiError.js";
 import { ValidationError } from "express-validation";
-import logger from "../utils/logger.js"; // <-- import
+import logger from "../utils/logger.js";
 
 class ErrorHandler {
   static notFound(req, _res, next) {
@@ -10,7 +10,6 @@ class ErrorHandler {
   static handle(err, req, res, _next) {
     let error = err;
 
-    // Check if it's an express-validation error
     const isExpressValidationError = err instanceof ValidationError;
 
     if (isExpressValidationError) {
@@ -23,7 +22,6 @@ class ErrorHandler {
       error = ApiError.badRequest("Validation failed", formattedErrors);
     }
 
-    // Convert other errors to ApiError
     if (!(error instanceof ApiError)) {
       const statusCode = error.statusCode || 500;
       const message = error.message || "Something went wrong";
@@ -35,7 +33,6 @@ class ErrorHandler {
       );
     }
 
-    // Only run these checks if NOT an express-validation error
     if (!isExpressValidationError) {
       if (err.name === "CastError") {
         error = ApiError.badRequest(`Invalid ${err.path}: ${err.value}`);
@@ -62,7 +59,6 @@ class ErrorHandler {
       }
     }
 
-    // Log server errors
     if (error.statusCode >= 500) {
       console.error(
         `[Error] ${req.method} ${req.originalUrl} -`,
@@ -70,7 +66,6 @@ class ErrorHandler {
       );
     }
 
-    // Send response
     return res.status(error.statusCode).json({
       success: false,
       statusCode: error.statusCode,
