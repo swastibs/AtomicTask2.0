@@ -1,9 +1,11 @@
 import express from "express";
 import { validate } from "express-validation";
-import passport from "passport";
-import { login, signup, getMe } from "./auth.controller.js";
-import { loginValidation, signupValidation } from "./auth.validation.js";
-import { authenticateJWT } from "../../shared/middlewares/auth.middleware.js";
+import { login, signup, refreshToken, logout } from "./auth.controller.js";
+import {
+  loginValidation,
+  signupValidation,
+  refreshTokenValidation,
+} from "./auth.validation.js";
 
 const router = express.Router();
 
@@ -24,10 +26,27 @@ router.post(
     { context: true },
     { abortEarly: false, stripUnknown: true },
   ),
-  passport.authenticate("local", { session: false }),
   login,
 );
 
-router.get("/me", authenticateJWT, getMe);
+router.post(
+  "/refresh-token",
+  validate(
+    refreshTokenValidation,
+    { context: true },
+    { abortEarly: false, stripUnknown: true },
+  ),
+  refreshToken,
+);
+
+router.post(
+  "/logout",
+  validate(
+    refreshTokenValidation,
+    { context: true },
+    { abortEarly: false, stripUnknown: true },
+  ),
+  logout,
+);
 
 export default router;

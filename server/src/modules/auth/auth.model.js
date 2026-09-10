@@ -24,6 +24,23 @@ const notificationPreferencesSchema = new Schema(
   { _id: false },
 );
 
+const refreshTokenSchema = new Schema(
+  {
+    token: {
+      type: String, // SHA-256 hash of the raw refresh token
+      required: true,
+      select: false,
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    userAgent: { type: String, default: null },
+    ip: { type: String, default: null },
+  },
+  { _id: true, timestamps: true },
+);
+
 const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 const reminderPreferencesSchema = new Schema(
@@ -406,6 +423,7 @@ const userSchema = new Schema(
     social: { type: socialSchema, default: () => ({}) },
     analytics: { type: analyticsSchema, default: () => ({}) },
 
+    refreshTokens: { type: [refreshTokenSchema], default: [], select: false },
     resetPasswordToken: { type: String, default: null, select: false },
     resetPasswordExpires: { type: Date, default: null, select: false },
     verificationToken: { type: String, default: null, select: false },
@@ -417,6 +435,7 @@ const userSchema = new Schema(
       virtuals: true,
       transform: (_doc, ret) => {
         delete ret.password;
+        delete ret.refreshTokens;
         delete ret.resetPasswordToken;
         delete ret.resetPasswordExpires;
         delete ret.verificationToken;
@@ -434,6 +453,7 @@ userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ githubId: 1 }, { sparse: true });
 userSchema.index({ twitterId: 1 }, { sparse: true });
 userSchema.index({ "subscription.paymentCustomerId": 1 }, { sparse: true });
+userSchema.index({ "refreshTokens.expiresAt": 1 }, { expireAfterSeconds: 0 });
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
